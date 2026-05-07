@@ -1,0 +1,566 @@
+для проверки:
+Не пустое
+fun notEmpty(t: String): String? = if (t.isBlank()) "Заполните поле" else null
+Минимум N символов
+fun minLength(n: Int): (String) -> String? = { t -> if (t.length < n) "Минимум $n символов" else null }
+Email
+fun isEmail(t: String): String? = if (!android.util.Patterns.EMAIL_ADDRESS.matcher(t).matches()) "Неверный email" else null
+Только цифры
+fun onlyDigits(t: String): String? = if (!t.all { it.isDigit() }) "Только цифры" else null
+Формат ДД.ММ.ГГГГ
+fun isDate(t: String): String? = if (!Regex("""^\d{2}\.\d{2}\.\d{4}$""").matches(t)) "ДД.ММ.ГГГГ" else null
+Телефон +7XXXXXXXXXX
+fun isPhone(t: String): String? = if (!Regex("""^\+7\d{10}$""").matches(t)) "Формат: +7XXXXXXXXXX" else null
+состояния для полей (в начало ProfileScreen)
+//состояния для каждого поля (чтобы хранить и менять данные)
+    var firstName by remember { mutableStateOf("Emmanuel") }
+    var lastName by remember { mutableStateOf("Oyiboke") }
+    var email by remember { mutableStateOf("primer@gmail.com") }
+    var address by remember { mutableStateOf("Nigeria") }
+    var birthDate by remember { mutableStateOf("28.03.2003") }
+validator = { isEmail(it) }  // ← просто передаёшь функцию (подключение)
+Используй оператор ?: (если первая вернёт null, сработает вторая):
+validator = { notEmpty(it) ?: minLength(3)(it) }
+
+
+ Меняем вызовы ProfileInfoRow (передаём состояния , т.е. меняем на имя переменных) 
+// Имя
+ProfileInfoRow(
+    label = "Имя",
+    value = firstName,  // БЫЛО: "Emmanuel" → СТАЛО: переменная firstName
+    isEditing = isEditing,
+    onValueChange = { firstName = it }  // ДОБАВИЛ: как обновлять значение
+)
+
+Spacer(modifier = Modifier.height(12.dp))
+
+// Фамилия
+ProfileInfoRow(
+    label = "Фамилия",
+    value = lastName,  // БЫЛО: "Oyiboke"
+    isEditing = isEditing,
+    onValueChange = { lastName = it }  //  ДОБАВИЛ
+)
+
+Spacer(modifier = Modifier.height(12.dp))
+
+// Email
+ProfileInfoRow(
+    label = "Email",
+    value = email,  //  БЫЛО: "primer@gmail.com"
+    isEditing = isEditing,
+    onValueChange = { email = it }  //  ДОБАВИЛ
+)
+
+Spacer(modifier = Modifier.height(12.dp))
+
+// Адрес
+ProfileInfoRow(
+    label = "Адрес",
+    value = address,  // БЫЛО: "Nigeria"
+    isEditing = isEditing,
+    onValueChange = { address = it }  //  ДОБАВИЛ
+)
+
+Spacer(modifier = Modifier.height(12.dp))
+
+// Дата рождения
+ProfileInfoRow(
+    label = "Дата рождения",
+    value = birthDate,  // БЫЛО: "28.03.2003"
+    isEditing = isEditing,
+    onValueChange = { birthDate = it }  //  ДОБАВИЛ
+)
+
+ Обновляем сам компонент ProfileInfoRow (добавляем параметр onValueChange)
+fun ProfileInfoRow(
+    label: String,
+    value: String,
+    isEditing: Boolean,
+    onValueChange: (String) -> Unit  //ДОБАВИЛ: параметр для обновления
+) {
+…
+OutlinedTextField(
+            value = value,
+            enabled = isEditing,  //	 ИСПРАВИЛ: упростил условие (было if/else)
+            onValueChange = onValueChange,  // ИСПРАВИЛ: теперь передаём колбэк извне
+            modifier = Modifier.fillMaxWidth(),
+
+----------------------------------------------------------------------------------------------------------------------------------------------------
+package com.example.signuplogininv1
+
+import android.content.Intent  // 🔴 ДОБАВИЛ: для перехода между экранами
+import android.os.Bundle
+import android.widget.Toast
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable  // 🔴 ДОБАВИЛ: для клика по тексту
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CheckboxDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+class SignUp : ComponentActivity() {
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            RegistrationScreen()
+        }
+    }
+
+    @Preview(showSystemUi = true)
+    @Composable
+    fun RegistrationScreen() {
+        var login by remember { mutableStateOf("") }
+        var email by remember { mutableStateOf("") }
+        var password by remember { mutableStateOf("") }
+        var confirmPassword by remember { mutableStateOf("") }
+        var isPrivacyPolicyChecked by remember { mutableStateOf(false) }
+        var passwordVisible by remember { mutableStateOf(false) }
+        var confirmPasswordVisible by remember { mutableStateOf(false) }
+        
+        // Состояния для ошибок
+        var loginError by remember { mutableStateOf("") }
+        var emailError by remember { mutableStateOf("") }
+        var passwordError by remember { mutableStateOf("") }
+        var confirmPasswordError by remember { mutableStateOf("") }
+        
+        val context = LocalContext.current  // 🔴 НУЖЕН: для Intent и Toast
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.White)
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 24.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Spacer(modifier = Modifier.height(60.dp))
+
+                Text(
+                    text = "Создайте аккаунт",
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFF3A3A3A)
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = "Завершите процесс регистрации,\nчтобы приступить к работе",
+                    fontSize = 14.sp,
+                    color = Color(0xFFA7A7A7),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(horizontal = 20.dp)
+                )
+                Spacer(modifier = Modifier.height(32.dp))
+
+                // === ЛОГИН ===
+                Text(
+                    text = "Логин",
+                    fontSize = 14.sp,
+                    color = Color(0xFF595959),
+                    modifier = Modifier.align(Alignment.Start).padding(start = 4.dp)
+                )
+                OutlinedTextField(
+                    value = login,
+                    onValueChange = { login = it; loginError = "" },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("Иванов Иван", color = Color(0xFFCFCFCF)) },
+                    shape = RoundedCornerShape(8.dp),
+                    isError = loginError.isNotEmpty(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFFA7A7A7),
+                        unfocusedBorderColor = Color(0xFFA7A7A7),
+                        errorBorderColor = Color.Red
+                    )
+                )
+                if (loginError.isNotEmpty()) {
+                    Text(text = loginError, color = Color.Red, fontSize = 12.sp,
+                        modifier = Modifier.align(Alignment.Start).padding(start = 4.dp, top = 4.dp))
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // === EMAIL ===
+                Text(
+                    text = "Email",
+                    fontSize = 14.sp,
+                    color = Color(0xFF595959),
+                    modifier = Modifier.align(Alignment.Start).padding(start = 4.dp)
+                )
+                OutlinedTextField(
+                    value = email,
+                    onValueChange = { email = it; emailError = "" },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("**********@gmail.com", color = Color(0xFFCFCFCF)) },
+                    shape = RoundedCornerShape(8.dp),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                    isError = emailError.isNotEmpty(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFFA7A7A7),
+                        unfocusedBorderColor = Color(0xFFA7A7A7),
+                        errorBorderColor = Color.Red
+                    )
+                )
+                if (emailError.isNotEmpty()) {
+                    Text(text = emailError, color = Color.Red, fontSize = 12.sp,
+                        modifier = Modifier.align(Alignment.Start).padding(start = 4.dp, top = 4.dp))
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // === ПАРОЛЬ ===
+                Text(
+                    text = "Пароль",
+                    fontSize = 14.sp,
+                    color = Color(0xFF595959),
+                    modifier = Modifier.align(Alignment.Start).padding(start = 4.dp)
+                )
+                OutlinedTextField(
+                    value = password,
+                    onValueChange = { password = it; passwordError = "" },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("**********", color = Color(0xFFCFCFCF)) },
+                    shape = RoundedCornerShape(8.dp),
+                    visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    isError = passwordError.isNotEmpty(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFFA7A7A7),
+                        unfocusedBorderColor = Color(0xFFA7A7A7),
+                        errorBorderColor = Color.Red
+                    ),
+                    trailingIcon = {
+                        IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                            Icon(
+                                imageVector = if (passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                contentDescription = null, tint = Color.Gray
+                            )
+                        }
+                    }
+                )
+                if (passwordError.isNotEmpty()) {
+                    Text(text = passwordError, color = Color.Red, fontSize = 12.sp,
+                        modifier = Modifier.align(Alignment.Start).padding(start = 4.dp, top = 4.dp))
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // === ПОВТОР ПАРОЛЯ ===
+                Text(
+                    text = "Повторите пароль",
+                    fontSize = 14.sp,
+                    color = Color(0xFF595959),
+                    modifier = Modifier.align(Alignment.Start).padding(start = 4.dp)
+                )
+                OutlinedTextField(
+                    value = confirmPassword,
+                    onValueChange = { confirmPassword = it; confirmPasswordError = "" },
+                    modifier = Modifier.fillMaxWidth(),
+                    placeholder = { Text("**********", color = Color(0xFFCFCFCF)) },
+                    shape = RoundedCornerShape(8.dp),
+                    visualTransformation = if (confirmPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                    isError = confirmPasswordError.isNotEmpty(),
+                    colors = OutlinedTextFieldDefaults.colors(
+                        focusedBorderColor = Color(0xFFA7A7A7),
+                        unfocusedBorderColor = Color(0xFFA7A7A7),
+                        errorBorderColor = Color.Red
+                    ),
+                    trailingIcon = {
+                        IconButton(onClick = { confirmPasswordVisible = !confirmPasswordVisible }) {
+                            Icon(
+                                imageVector = if (confirmPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff,
+                                contentDescription = null, tint = Color.Gray
+                            )
+                        }
+                    }
+                )
+                if (confirmPasswordError.isNotEmpty()) {
+                    Text(text = confirmPasswordError, color = Color.Red, fontSize = 12.sp,
+                        modifier = Modifier.align(Alignment.Start).padding(start = 4.dp, top = 4.dp))
+                }
+                Spacer(modifier = Modifier.height(47.dp))
+
+                // === ЧЕКБОКС ===
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Checkbox(
+                        checked = isPrivacyPolicyChecked,
+                        onCheckedChange = { isPrivacyPolicyChecked = it },
+                        colors = CheckboxDefaults.colors(
+                            checkedColor = Color(0xFF0560FA),
+                            uncheckedColor = Color(0xFFA7A7A7)
+                        )
+                    )
+                    Text(
+                        text = "Отметьте это поле, если вы соглашаетесь с нашей Политикой конфиденциальности",
+                        fontSize = 12.sp,
+                        color = Color(0xFF8D8A8A)
+                    )
+                }
+                Spacer(modifier = Modifier.height(106.dp))
+
+                // === КНОПКА ЗАРЕГИСТРИРОВАТЬСЯ ===
+                Button(
+                    onClick = {
+                        var isValid = true
+                        
+                        if (login.length < 3) { loginError = "Минимум 3 символа"; isValid = false }
+                        if (!android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
+                            emailError = "Некорректный email"; isValid = false
+                        }
+                        if (password.length < 6) { passwordError = "Минимум 6 символов"; isValid = false }
+                        if (password != confirmPassword) { confirmPasswordError = "Пароли не совпадают"; isValid = false }
+                        if (!isPrivacyPolicyChecked) {
+                            Toast.makeText(context, "Примите политику конфиденциальности", Toast.LENGTH_SHORT).show()
+                            isValid = false
+                        }
+                        
+                        if (isValid) {
+                            Toast.makeText(context, "Регистрация успешна!", Toast.LENGTH_SHORT).show()
+                            
+                            // 🔴 ПЕРЕХОД НА ВТОРОЙ ЭКРАН ЧЕРЕЗ INTENT
+                            val intent = Intent(context, LoginIn::class.java)  // ← указываем класс второго экрана
+                            intent.putExtra("EXTRA_LOGIN", login)   // 🔴 передаём логин
+                            intent.putExtra("EXTRA_EMAIL", email)   // 🔴 передаём email
+                            context.startActivity(intent)  // 🔴 запускаем второй экран
+                        }
+                    },
+                    modifier = Modifier.fillMaxWidth().height(46.dp),
+                    shape = RoundedCornerShape(8.dp),
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = if (login.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty()) 
+                            Color(0xFF0560FA) else Color(0xFFA7A7A7)
+                    ),
+                    enabled = login.isNotEmpty() && email.isNotEmpty() && password.isNotEmpty()
+                ) {
+                    Text(text = "Зарегистрироваться", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+
+                // === ССЫЛКА НА ВХОД (переход без регистрации) ===
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(bottom = 24.dp)
+                ) {
+                    Text(text = "Уже есть профиль? ", fontSize = 14.sp, color = Color(0xFFA7A7A7))
+                    Text(
+                        text = "Вход",
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = Color(0xFF0560FA),
+                        modifier = Modifier.clickable {  // 🔴 переход по клику
+                            val intent = Intent(context, LoginIn::class.java)
+                            intent.putExtra("EXTRA_LOGIN", login)
+                            intent.putExtra("EXTRA_EMAIL", email)
+                            context.startActivity(intent)
+                        }
+                    )
+                }
+            }
+        }
+    }
+}
+package com.example.signuplogininv1  // 🔴 ВАЖНО: тот же пакет, что и в SignUp.kt
+
+import android.os.Bundle
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+
+class LoginIn : ComponentActivity() {  // 🔴 НОВЫЙ КЛАСС: второй экран
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        enableEdgeToEdge()
+        setContent {
+            // 🔴 ПОЛУЧАЕМ данные из Intent
+            val receivedLogin = intent.getStringExtra("EXTRA_LOGIN") ?: ""
+            val receivedEmail = intent.getStringExtra("EXTRA_EMAIL") ?: ""
+            
+            LoginScreenContent(
+                receivedLogin = receivedLogin,
+                receivedEmail = receivedEmail,
+                onBackClick = { finish() }  // 🔴 finish() закрывает этот экран и возвращает к предыдущему
+            )
+        }
+    }
+}
+
+// 🔴 ОТДЕЛЬНЫЙ @Composable — так можно использовать и в Preview, и в Activity
+@Composable
+fun LoginScreenContent(
+    receivedLogin: String,
+    receivedEmail: String,
+    onBackClick: () -> Unit
+) {
+    var loginInput by remember { mutableStateOf(receivedLogin) }  // 🔴 автозаполнение из переданных данных
+    var passwordInput by remember { mutableStateOf("") }
+    
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.White)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Spacer(modifier = Modifier.height(60.dp))
+            
+            Text(
+                text = "Вход в аккаунт",
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color(0xFF3A3A3A)
+            )
+            Spacer(modifier = Modifier.height(32.dp))
+            
+            // 🔴 Приветствие с переданным именем
+            if (receivedLogin.isNotEmpty()) {
+                Text(
+                    text = "Рады видеть вас снова, $receivedLogin!",
+                    fontSize = 14.sp,
+                    color = Color(0xFF0560FA),
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+            
+            // Поле Логин
+            Text(
+                text = "Логин",
+                fontSize = 14.sp,
+                color = Color(0xFF595959),
+                modifier = Modifier.align(Alignment.Start)
+            )
+            OutlinedTextField(
+                value = loginInput,
+                onValueChange = { loginInput = it },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text("Введите логин") },
+                shape = RoundedCornerShape(8.dp)
+            )
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Поле Пароль
+            Text(
+                text = "Пароль",
+                fontSize = 14.sp,
+                color = Color(0xFF595959),
+                modifier = Modifier.align(Alignment.Start)
+            )
+            OutlinedTextField(
+                value = passwordInput,
+                onValueChange = { passwordInput = it },
+                modifier = Modifier.fillMaxWidth(),
+                placeholder = { Text("**********") },
+                shape = RoundedCornerShape(8.dp),
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
+            )
+            Spacer(modifier = Modifier.height(40.dp))
+            
+            // Кнопка Войти
+            Button(
+                onClick = { /* логика входа */ },
+                modifier = Modifier.fillMaxWidth().height(46.dp),
+                shape = RoundedCornerShape(8.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF0560FA))
+            ) {
+                Text("Войти", fontSize = 16.sp, fontWeight = FontWeight.Bold)
+            }
+            Spacer(modifier = Modifier.height(24.dp))
+            
+            // Ссылка назад
+            Text(
+                text = "← Назад к регистрации",
+                fontSize = 14.sp,
+                color = Color(0xFF0560FA),
+                modifier = Modifier.clickable { onBackClick() }
+            )
+        }
+    }
+}
+
+// 🔴 Preview для удобной отладки
+@Preview
+@Composable
+fun LoginScreenPreview() {
+    LoginScreenContent(
+        receivedLogin = "Emmanuel",
+        receivedEmail = "test@email.com",
+        onBackClick = {}
+    )
+}
