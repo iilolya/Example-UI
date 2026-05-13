@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>админка · эмилия савенцова</title>
+  <link rel="stylesheet" href="css/admin.css">
+</head>
+<body class="admin-page">
+
+  <!--  форма входа -->
+  <div class="admin-login" id="loginBlock">
+    <h2 class="admin-login__title">вход</h2>
+    <input class="admin-login__input" type="password" id="pass" placeholder="пароль">
+    <button class="admin-login__button" type="button" onclick="checkPass()">войти</button>
+    <p class="admin-login__error" id="err"></p>
+  </div>
+
+  <!--  панель управления (скрыта до входа) -->
+  <div class="admin-panel" id="adminBlock" style="display: none;">
+    
+    <!-- элемент: шапка панели -->
+    <div class="admin-panel__header">
+      <a class="admin-panel__link" href="index.html">← на сайт</a>
+      <button class="admin-panel__button" type="button" onclick="logout()">выйти</button>
+    </div>
+
+    <!--  карточка загрузки фото -->
+    <div class="admin-card">
+      <h3 class="admin-card__title">добавить фото</h3>
+      <input class="admin-card__input" type="file" id="file" accept="image/*">
+      <input class="admin-card__input" type="text" id="title" placeholder="название">
+      <select class="admin-card__select" id="cat">
+        <option value="portrait">портрет</option>
+        <option value="wedding">свадьба</option>
+        <option value="street">стрит</option>
+        <option value="landscape">пейзаж</option>
+        <option value="nature">природа</option>
+        <option value="family">семейная</option>
+      </select>
+      <button class="admin-card__button" type="button" onclick="addPhoto()">сохранить</button>
+      <div class="admin-preview" id="preview"></div>
+    </div>
+
+    <!-- список фото -->
+    <div class="admin-card">
+      <h3 class="admin-card__title">галерея (<span id="count">0</span>)</h3>
+      <div class="admin-gallery" id="list"></div>
+    </div>
+
+  </div>
+
+  <script src="js/admin.js"></script>
+</body>
+</html>
